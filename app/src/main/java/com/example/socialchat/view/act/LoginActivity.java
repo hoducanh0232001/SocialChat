@@ -2,6 +2,7 @@ package com.example.socialchat.view.act;
 
 import android.app.ProgressDialog;
 import android.content.Intent;
+import android.text.TextUtils;
 import android.view.View;
 import android.widget.EditText;
 import android.widget.ImageView;
@@ -58,29 +59,37 @@ public class LoginActivity extends BaseActivity{
                 Intent intent = new Intent();
                 intent.setClass(LoginActivity.this,RegisterActivity.class);
                 startActivity(intent);
+                overridePendingTransition(android.R.anim.slide_in_left, android.R.anim.slide_out_right);
+                finish();
     }
     public void loGinAccount(){
+        FirebaseAuth mAuth = FirebaseAuth.getInstance();
         String email = edtEmailLogin.getText().toString().trim();
         String password = edtPassLogin.getText().toString().trim();
-        FirebaseAuth mAuth = FirebaseAuth.getInstance();
         progressDialog.show();
-        mAuth.signInWithEmailAndPassword(email, password)
-                .addOnCompleteListener(this, new OnCompleteListener<AuthResult>() {
-                    @Override
-                    public void onComplete(@NonNull Task<AuthResult> task) {
-                        progressDialog.dismiss();
-                        if (task.isSuccessful()) {
-                            // Sign in success, update UI with the signed-in user's information
-                            Intent intent = new Intent(LoginActivity.this, HomeActivity.class);
-                            startActivity(intent);
-
-                        } else {
-                            // If sign in fails, display a message to the user.
-
-                            Toast.makeText(LoginActivity.this, "Authentication failed.",
-                                    Toast.LENGTH_SHORT).show();
-                        }
+        if(TextUtils.isEmpty(email)){
+            edtEmailLogin.setError("Email cannot be empty!");
+            edtEmailLogin.requestFocus();
+        }
+        else if(TextUtils.isEmpty(password)){
+            edtPassLogin.setError("Password cannot be empty!");
+            edtPassLogin.requestFocus();
+        }
+        else{
+            mAuth.signInWithEmailAndPassword(email,password).addOnCompleteListener(new OnCompleteListener<AuthResult>() {
+                @Override
+                public void onComplete(@NonNull Task<AuthResult> task) {
+                    if (task.isSuccessful()){
+                        Intent intent = new Intent(LoginActivity.this, HomeActivity.class);
+                        startActivity(intent);
                     }
-                });
+                    else{
+                        Toast.makeText(LoginActivity.this, "Login Failed", Toast.LENGTH_SHORT).show();
+                    }
+                }
+            });
+        }
+
+
     }
 }

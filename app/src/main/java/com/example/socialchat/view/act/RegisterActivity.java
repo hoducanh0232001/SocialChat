@@ -2,9 +2,11 @@ package com.example.socialchat.view.act;
 
 import android.app.ProgressDialog;
 import android.content.Intent;
+import android.text.TextUtils;
 import android.view.View;
 import android.widget.EditText;
 import android.widget.ImageView;
+import android.widget.TextView;
 import android.widget.Toast;
 
 import androidx.annotation.NonNull;
@@ -18,8 +20,8 @@ import com.google.firebase.auth.FirebaseUser;
 
 public class RegisterActivity extends BaseActivity{
     private EditText edtEmail, edtPass;
-    private ImageView imgRes;
-    private ProgressDialog progressDialog;
+    private ImageView imgRes, btnBackLogin;
+    private TextView textBackLogin;
     @Override
     protected Class getClassViewModel() {
         return null;
@@ -35,7 +37,20 @@ public class RegisterActivity extends BaseActivity{
             edtEmail = findViewById(R.id.edtEmailRegister);
             edtPass = findViewById(R.id.edtPassRegister);
             imgRes = findViewById(R.id.register_btn);
-            progressDialog = new ProgressDialog(this);
+            btnBackLogin = findViewById(R.id.btn_back);
+            btnBackLogin.setOnClickListener(new View.OnClickListener() {
+                @Override
+                public void onClick(View view) {
+                    goToLogin();
+                }
+            });
+            textBackLogin = findViewById(R.id.back_login);
+            textBackLogin.setOnClickListener(new View.OnClickListener() {
+                @Override
+                public void onClick(View view) {
+                    goToLogin();
+                }
+            });
             imgRes.setOnClickListener(new View.OnClickListener() {
                 @Override
                 public void onClick(View view) {
@@ -43,27 +58,38 @@ public class RegisterActivity extends BaseActivity{
                 }
             });
     }
-    public void CreateAccount(){
+    private void CreateAccount(){
+        FirebaseAuth mAuth = FirebaseAuth.getInstance();
         String email = edtEmail.getText().toString().trim();
         String password = edtPass.getText().toString().trim();
-        FirebaseAuth mAuth = FirebaseAuth.getInstance();
-        progressDialog.show();
-        mAuth.createUserWithEmailAndPassword(email, password)
-                .addOnCompleteListener(this, new OnCompleteListener<AuthResult>() {
-                    @Override
-                    public void onComplete(@NonNull Task<AuthResult> task) {
-                        progressDialog.dismiss();
-                        if (task.isSuccessful()) {
-                            Intent intent = new Intent(RegisterActivity.this,HomeActivity.class);
-                            startActivity(intent);
-                           finish(); // đóng tất cả act trước HomeActivity
-                        } else {
-                            // If sign in fails, display a message to the user.
-
-                            Toast.makeText(RegisterActivity.this, "Authentication failed.",
-                                    Toast.LENGTH_SHORT).show();
-                        }
+        if(TextUtils.isEmpty(email)){
+            edtEmail.setError("Email cannot be empty!");
+            edtEmail.requestFocus();
+        }
+        else if(TextUtils.isEmpty(password)){
+            edtPass.setError("Password cannot be empty!");
+            edtPass.requestFocus();
+        }
+        else{
+            mAuth.createUserWithEmailAndPassword(email,password).addOnCompleteListener(new OnCompleteListener<AuthResult>() {
+                @Override
+                public void onComplete(@NonNull Task<AuthResult> task) {
+                    if(task.isSuccessful()){
+                        Intent intent = new Intent(RegisterActivity.this, HomeActivity.class);
+                        startActivity(intent);
                     }
-                });
+                    else{
+                        Toast.makeText(RegisterActivity.this,"Register failed!"+task.getException().getMessage(),Toast.LENGTH_SHORT).show();
+                    }
+                }
+            });
+        }
+
+    }
+    public void goToLogin(){
+        Intent intent = new Intent(this,LoginActivity.class);
+        startActivity(intent);
+        overridePendingTransition(android.R.anim.slide_in_left, android.R.anim.slide_out_right);
+        finish();
     }
 }
